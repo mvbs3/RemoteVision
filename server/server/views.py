@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import cv2
 from PIL import Image
@@ -10,6 +10,14 @@ import os
 face_detector = cv2.CascadeClassifier('../haarcascade_frontalface_default.xml')
 @csrf_exempt
 def processar_frames(request):
+    if request.method == 'OPTIONS':
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = '*'  # ou adicione seu domínio específico
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+    if request.method == 'GET':
+        return HttpResponse("Testando")
     if request.method == 'POST':
         # Obter o frame do corpo da solicitação
         frame_data_url = json.loads(request.body.decode('utf-8'))
