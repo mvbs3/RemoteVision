@@ -51,4 +51,8 @@ def processar_frames():
     return jsonify({'error': 'Método não permitido'}), 405
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    ssl_cert_path = './cert.pem'
+    ssl_key_path = './key.pem'
+
+    app.run(ssl_context=(ssl_cert_path, ssl_key_path), host='0.0.0.0', port=8000, debug=True)
+    

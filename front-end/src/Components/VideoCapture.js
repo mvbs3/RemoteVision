@@ -27,7 +27,7 @@ const VideoCapture = () => {
         // Enviar o quadro para o servidor Django
 
         const response = await axios.post(
-          "http://localhost:8000/processar_frames/",
+          "https://192.168.154.70:8000/processar_frames/",
           {
             frame: base64Data,
           }
