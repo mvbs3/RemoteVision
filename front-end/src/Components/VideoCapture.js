@@ -56,7 +56,7 @@ const VideoCapture = () => {
     }
   };
   const handleStartVideo = () => {
-    const response1 = axios.get("http://localhost:8000/processar_frames/");
+    const response1 = axios.get("http://10.0.0.102:8000/processar_frames/");
     console.log(response1);
   };
   startVideo();
