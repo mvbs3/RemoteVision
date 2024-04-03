@@ -7,10 +7,83 @@ import base64
 import json
 import numpy as np
 import os
-
+import uuid
+    
 app = Flask(__name__)
-CORS(app)
 
+CORS(app)
+ip = "10.0.0.200"
+my_port=5001
+
+def generate_service_id():
+    # Gerar um UUID (identificador único universal)
+    service_id = uuid.uuid4()
+    # Formatando o UUID para o formato desejado
+    formatted_service_id = str(service_id).replace('-', '')[:23]
+    return formatted_service_id
+
+# Exemplo de uso
+service_id = generate_service_id()
+print(service_id)
+# Endpoint GET que retorna "ola"
+
+# Função para registrar na API MEC
+def register_mec():
+    import requests
+
+    # Detalhes da API Flask
+    flask_host = ip  # ou "0.0.0.0" para acesso externo
+    flask_port = my_port
+    flask_sid = service_id
+    flask_path = "/apiFlask/v1"
+
+    # JSON da API MEC com detalhes da API Flask preenchidos
+    mec_data = {
+        "description": "API Flask de processamento de imagem com visão computacional",
+        "endpoints": [
+            {
+                "description": "Metodo para testar se a api esta funcionando corretamente",
+                "method": "GET",
+                "name": "Processar frame",
+                "path": "/processar_frames/",
+                
+            },
+            {
+                "description": "Metodo para enviar uma imagem e o frame ser processado e retornar posicao do rosto.",
+                "method": "POST",
+                "name": "Processar frame",
+                "path": "/processar_frames/",
+                
+            }
+        ],
+        "host": flask_host,
+        "name": "remoteComputation",
+        "path": flask_path,
+        "port": flask_port,
+        "protocol" :"https",
+        "sid": "sid",
+        "type": "ImgProc"
+    }
+
+    # URL de registro na API MECdef generate_service_id():
+  
+
+# Exemplo de uso
+    mec_url = "http://oai-mep.org/service_registry/v1/register"
+
+    try:
+        # Fazendo a solicitação POST para registrar na API MEC
+        response = requests.post(mec_url, json=mec_data)
+        response.raise_for_status()  # Verifica se houve algum erro na solicitação
+
+        # Extraindo e imprimindo a resposta
+        response_data = response.json()
+        print("Registro na API MEC bem-sucedido:", response_data)
+    except Exception as e:
+        print("Erro ao registrar na API MEC:", e)
+
+# Registrar na API MEC ao iniciar o aplicativo Flask
+register_mec()
 face_detector = cv2.CascadeClassifier('../haarcascade_frontalface_default.xml')
 
 @app.route('/processar_frames/', methods=['GET', 'POST', 'OPTIONS'])
@@ -54,5 +127,5 @@ if __name__ == '__main__':
     ssl_cert_path = './cert.pem'
     ssl_key_path = './key.pem'
 
-    app.run(ssl_context=(ssl_cert_path, ssl_key_path), host='0.0.0.0', port=8000, debug=True)
+    app.run(ssl_context=(ssl_cert_path, ssl_key_path), host=ip, port=my_port)
     
