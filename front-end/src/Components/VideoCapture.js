@@ -27,7 +27,7 @@ const VideoCapture = () => {
         // Enviar o quadro para o servidor Django
 
         const response = await axios.post(
-          "http://localhost:8000/processar_frames/",
+          "http://oai-mep.org/remoteComputation/processar_frames/",
           {
             frame: base64Data,
           }
@@ -56,12 +56,22 @@ const VideoCapture = () => {
     }
   };
   const handleStartVideo = () => {
-    const response1 = axios.get("http://localhost:8000/processar_frames/");
+    const response1 = axios.get(
+      "http://oai-mep.org/remoteComputation/processar_frames/"
+    );
     console.log(response1);
   };
   startVideo();
   return (
-    <div>
+    <div
+      style={{
+        position: "relative",
+        display: "flex",
+        justifyContent: "flex-end",
+      }}
+    >
+      <button onClick={handleStartVideo}>Iniciar Câmera</button>
+
       {/* Vídeo da câmera */}
       <video
         ref={videoRef}
@@ -79,23 +89,30 @@ const VideoCapture = () => {
       ></canvas>
 
       {/* Exibir retângulos sobre as faces detectadas */}
-      {faceLocations.map((face, index) => (
-        <div
-          key={index}
-          style={{
-            position: "absolute",
-            left: face.x + position.left,
-            top: face.y + position.top,
-            width: face.w,
-            height: face.h,
-            border: "2px solid red",
-            pointerEvents: "none",
-            // Centralizar o retângulo
-            boxSizing: "border-box", // Incluir a largura da borda no cálculo
-          }}
-        ></div>
-      ))}
-      <button onClick={handleStartVideo}>Iniciar Câmera</button>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexDirection: "column",
+        }}
+      >
+        {faceLocations.map((face, index) => (
+          <div
+            key={index}
+            style={{
+              position: "absolute",
+              left: face.x + position.left,
+              top: face.y + position.top,
+              width: face.w,
+              height: face.h,
+              border: "2px solid red",
+              pointerEvents: "none",
+              // Centralizar o retângulo
+              boxSizing: "border-box", // Incluir a largura da borda no cálculo
+            }}
+          ></div>
+        ))}
+      </div>
     </div>
   );
 };
