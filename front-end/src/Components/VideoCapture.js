@@ -27,7 +27,7 @@ const VideoCapture = () => {
         // Enviar o quadro para o servidor Django
 
         const response = await axios.post(
-          "https://127.0.0.1:8000/processar_frames/",
+          "http://oai-mep.org/remoteComputation/processar_frames/",
           {
             frame: base64Data,
           }
@@ -57,7 +57,7 @@ const VideoCapture = () => {
   };
   const handleStartVideo = () => {
     const response1 = axios.get(
-      "https://192.168.154.70:8000/processar_frames/"
+      "http://oai-mep.org/remoteComputation/processar_frames/"
     );
     console.log(response1);
   };

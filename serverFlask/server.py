@@ -12,7 +12,7 @@ import uuid
 app = Flask(__name__)
 
 CORS(app)
-ip = "10.0.0.200"
+ip = "172.22.74.222"
 my_port=5001
 
 def generate_service_id():
@@ -60,7 +60,7 @@ def register_mec():
         "name": "remoteComputation",
         "path": flask_path,
         "port": flask_port,
-        "protocol" :"https",
+        "protocol" :"http",
         "sid": "sid",
         "type": "ImgProc"
     }
@@ -127,5 +127,5 @@ if __name__ == '__main__':
     ssl_cert_path = './cert.pem'
     ssl_key_path = './key.pem'
 
-    app.run(ssl_context=(ssl_cert_path, ssl_key_path), host=ip, port=my_port)
+    app.run( host=ip, port=my_port)
     
