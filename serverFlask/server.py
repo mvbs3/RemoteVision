@@ -3,16 +3,18 @@ from flask_cors import CORS
 import cv2
 from PIL import Image
 from io import BytesIO
+import io
 import base64
 import json
 import numpy as np
 import os
 import uuid
+
     
 app = Flask(__name__)
 
 CORS(app)
-ip = "172.22.74.222"
+ip = "10.0.0.200"
 my_port=5001
 
 def generate_service_id():
@@ -69,7 +71,7 @@ def register_mec():
   
 
 # Exemplo de uso
-    mec_url = "http://oai-mep.org/service_registry/v1/register"
+    mec_url = "http://192.168.70.2/service_registry/v1/register"
 
     try:
         # Fazendo a solicitação POST para registrar na API MEC
@@ -83,7 +85,8 @@ def register_mec():
         print("Erro ao registrar na API MEC:", e)
 
 # Registrar na API MEC ao iniciar o aplicativo Flask
-register_mec()
+#register_mec()
+
 face_detector = cv2.CascadeClassifier('../haarcascade_frontalface_default.xml')
 
 @app.route('/processar_frames/', methods=['GET', 'POST', 'OPTIONS'])
@@ -100,18 +103,21 @@ def processar_frames():
 
     if request.method == 'POST':
         # Obter o frame do corpo da solicitação
-        frame_data_url = json.loads(request.data.decode('utf-8'))
-        base64_data = frame_data_url.get("frame", "")
-        image_data = base64.b64decode(base64_data)
-        image = Image.open(BytesIO(image_data))
-        
+        frame_data = request.json['frame']
+    
+    # Converter o vetor tridimensional em uma matriz numpy
+        frame_array = np.array(frame_data)
+    
+    # Converter a matriz numpy em uma imagem PIL
+        image = Image.fromarray(frame_array.astype('uint8'))
+        #print(image)
         image_grey = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2GRAY)
         image_grey = cv2.resize(image_grey, (640, 480))
         
         # Converter a imagem PIL para um array numpy
         frame_np = face_detector.detectMultiScale(image_grey, minNeighbors=3)
 
-        # Detectar faces na imagem
+        # Detectar faces na imagemx 
         nome_arquivo = 'imagem_recebida.jpg'
         caminho_arquivo = os.path.join('./', nome_arquivo)
         for (x, y, w, h) in frame_np:
@@ -120,6 +126,7 @@ def processar_frames():
 
         # Retornar as localizações das faces em formato JSON
         return jsonify({'faces': [{'x': int(x), 'y': int(y), 'w': int(w), 'h': int(h)} for x, y, w, h in frame_np]})
+        
 
     return jsonify({'error': 'Método não permitido'}), 405
 
