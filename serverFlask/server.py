@@ -9,12 +9,12 @@ import json
 import numpy as np
 import os
 import uuid
-
+import time
     
 app = Flask(__name__)
 
 CORS(app)
-ip = "10.0.0.200"
+ip = "192.168.27.241"
 my_port=5001
 
 def generate_service_id():
@@ -47,14 +47,14 @@ def register_mec():
                 "description": "Metodo para testar se a api esta funcionando corretamente",
                 "method": "GET",
                 "name": "Processar frame",
-                "path": "/processar_frames/",
+                "path": "/processar_frames",
                 
             },
             {
                 "description": "Metodo para enviar uma imagem e o frame ser processado e retornar posicao do rosto.",
                 "method": "POST",
                 "name": "Processar frame",
-                "path": "/processar_frames/",
+                "path": "/processar_frames",
                 
             }
         ],
@@ -85,11 +85,12 @@ def register_mec():
         print("Erro ao registrar na API MEC:", e)
 
 # Registrar na API MEC ao iniciar o aplicativo Flask
-#register_mec()
+register_mec()
 
 face_detector = cv2.CascadeClassifier('../haarcascade_frontalface_default.xml')
 
-@app.route('/processar_frames/', methods=['GET', 'POST', 'OPTIONS'])
+
+@app.route('/processar_frames', methods=['GET', 'POST', 'OPTIONS'])
 def processar_frames():
     if request.method == 'OPTIONS':
         response = jsonify()
@@ -115,8 +116,10 @@ def processar_frames():
         image_grey = cv2.resize(image_grey, (640, 480))
         
         # Converter a imagem PIL para um array numpy
+        start_time = time.time()
         frame_np = face_detector.detectMultiScale(image_grey, minNeighbors=3)
-
+        timeProcess = (time.time() - start_time) * 1000 
+        #print(timeProcess)
         # Detectar faces na imagemx 
         nome_arquivo = 'imagem_recebida.jpg'
         caminho_arquivo = os.path.join('./', nome_arquivo)
@@ -125,11 +128,26 @@ def processar_frames():
         cv2.imwrite(caminho_arquivo, image_grey)
 
         # Retornar as localizações das faces em formato JSON
-        return jsonify({'faces': [{'x': int(x), 'y': int(y), 'w': int(w), 'h': int(h)} for x, y, w, h in frame_np]})
+        return jsonify({'faces': [{'x': int(x), 'y': int(y), 'w': int(w), 'h': int(h)} for x, y, w, h in frame_np], "timeProcess" : timeProcess})
         
 
     return jsonify({'error': 'Método não permitido'}), 405
+@app.route('/ping', methods=['GET', 'OPTIONS'])
+def pring():
+    if request.method == 'OPTIONS':
+        response = jsonify()
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response
 
+    if request.method == 'GET':
+
+        return "pong"
+
+        
+
+    return jsonify({'error': 'Método não permitido'}), 405
 if __name__ == '__main__':
     ssl_cert_path = './cert.pem'
     ssl_key_path = './key.pem'
