@@ -10,11 +10,13 @@ import numpy as np
 import os
 import uuid
 import time
+from fer import FER
+
     
 app = Flask(__name__)
 
 CORS(app)
-ip = "10.0.0.102"
+ip = "10.0.0.200"
 my_port=5001
 
 def generate_service_id():
@@ -85,9 +87,11 @@ def register_mec():
         print("Erro ao registrar na API MEC:", e)
 
 # Registrar na API MEC ao iniciar o aplicativo Flask
-register_mec()
+#register_mec()
 
 face_detector = cv2.CascadeClassifier('../haarcascade_frontalface_default.xml')
+emotion_detector = FER(mtcnn=True)
+
 
 
 @app.route('/processar_frames', methods=['GET', 'POST', 'OPTIONS'])
@@ -113,13 +117,15 @@ def processar_frames():
         image = Image.fromarray(frame_array.astype('uint8'))
         #print(image)
         image_grey = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2GRAY)
+        image_resized = cv2.resize(np.array(image), (640, 480))
         image_grey = cv2.resize(image_grey, (640, 480))
         
         # Converter a imagem PIL para um array numpy
         start_time = time.time()
         frame_np = face_detector.detectMultiScale(image_grey, minNeighbors=3)
         timeProcess = (time.time() - start_time) * 1000 
-        #print(timeProcess)
+        #analysis = emotion_detector.detect_emotions(image_resized)
+        #print(analysis)
         # Detectar faces na imagemx 
         nome_arquivo = 'imagem_recebida.jpg'
         caminho_arquivo = os.path.join('./', nome_arquivo)
@@ -129,6 +135,59 @@ def processar_frames():
 
         # Retornar as localizações das faces em formato JSON
         return jsonify({'faces': [{'x': int(x), 'y': int(y), 'w': int(w), 'h': int(h)} for x, y, w, h in frame_np], "timeProcess" : timeProcess})
+        
+
+    return jsonify({'error': 'Método não permitido'}), 405
+@app.route('/processar_emotion', methods=['GET', 'POST', 'OPTIONS'])
+def processar_emotions():
+    if request.method == 'OPTIONS':
+        response = jsonify()
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response
+
+    if request.method == 'GET':
+        return "Testando"
+
+    if request.method == 'POST':
+        # Obter o frame do corpo da solicitação
+        frame_data = request.json['frame']
+    
+    # Converter o vetor tridimensional em uma matriz numpy
+        frame_array = np.array(frame_data)
+    
+    # Converter a matriz numpy em uma imagem PIL
+        image = Image.fromarray(frame_array.astype('uint8'))
+        #print(image)
+        
+        image_resized = cv2.resize(np.array(image), (640, 480))
+        
+        # Converter a imagem PIL para um array numpy
+        start_time = time.time()
+        analysis = emotion_detector.detect_emotions(image_resized)
+        timeProcess = (time.time() - start_time) * 1000 
+
+        print(analysis)
+        # Detectar faces na imagemx 
+        
+        faces_data = []
+        max_emotions = []
+        max_values = []
+
+        for face in analysis:
+            # Obtém os dados do rosto
+            face_data = {'x': int(face['box'][0]), 'y': int(face['box'][1]), 'w': int(face['box'][2]), 'h': int(face['box'][3])}
+            faces_data.append(face_data)
+
+            # Obtém a emoção dominante e seu valor associado
+            max_emotion = max(face['emotions'], key=face['emotions'].get)
+            max_value = face['emotions'][max_emotion]
+
+            max_emotions.append(max_emotion)
+            max_values.append(max_value)
+        # Retornar as localizações das faces em formato JSON
+        return jsonify({'faces': faces_data, "timeProcess" : timeProcess, 'emotion' : max_emotions, 'emotionValue': max_values})
         
 
     return jsonify({'error': 'Método não permitido'}), 405

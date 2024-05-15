@@ -30,4 +30,4 @@ Linux/MacOS
 
 #### entrar venv linux
 
-`source venv/activate`
+`source venv/bin/activate`
