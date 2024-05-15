@@ -19,3 +19,15 @@ Linux/MacOS
 `openssl genpkey -algorithm RSA -out key.pem -aes256`
 
 `openssl req -new -x509 -key key.pem -out cert.pem -days 365 `
+
+### criar venv
+
+`python3 -m venv venv`
+
+#### entrar venv windowns
+
+`.\venv\Scripts\activate`
+
+#### entrar venv linux
+
+`source venv/activate`

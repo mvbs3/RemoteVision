@@ -14,7 +14,7 @@ import time
 app = Flask(__name__)
 
 CORS(app)
-ip = "192.168.27.241"
+ip = "10.0.0.102"
 my_port=5001
 
 def generate_service_id():
