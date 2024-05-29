@@ -11,13 +11,19 @@ import os
 import uuid
 import time
 from fer import FER
+import csv
+import sys
 
     
 app = Flask(__name__)
 
 CORS(app)
-ip = "10.0.0.200"
+
+ip = "192.168.1.144"
+#ip = "10.0.0.200"
+
 my_port=5001
+lastData = {}
 
 def generate_service_id():
     # Gerar um UUID (identificador único universal)
@@ -28,10 +34,29 @@ def generate_service_id():
 
 # Exemplo de uso
 service_id = generate_service_id()
-print(service_id)
+#print(service_id)
 # Endpoint GET que retorna "ola"
 
-# Função para registrar na API MEC
+# Função para registrar na API 
+
+def salvar_dados_csv(data):
+    # Verificar se o arquivo CSV já existe
+    csv_file = 'data.csv'
+
+    # Verifica se o arquivo CSV já existe
+    file_exists = os.path.isfile(csv_file)
+
+    # Abre o arquivo CSV no modo de adição (append)
+    with open(csv_file, mode='a', newline='') as file:
+        writer = csv.writer(file)
+
+        # Se o arquivo não existe, escreve o cabeçalho
+        if not file_exists:
+            writer.writerow(['rttTimer(ms)', 'latencyTime(ms)', 'packetSizeUp(B)', 'packetSizeDown(B)', 'Throughput(B/s)', 'processTime(ms)'])
+
+        # Escreve os dados no CSV
+        writer.writerow([data['rttTimer'], data['latencyTime'], data['packetSizeUp'], data['packetSizeDown'], data['Throughput'], data['processTime']])
+
 def register_mec():
     import requests
 
@@ -151,11 +176,18 @@ def processar_emotions():
         return "Testando"
 
     if request.method == 'POST':
+        global lastData
         # Obter o frame do corpo da solicitação
-        frame_data = request.json['frame']
-    
-    # Converter o vetor tridimensional em uma matriz numpy
-        frame_array = np.array(frame_data)
+        frame_data = request.json
+        #server_time = time.time()
+        #client_time = frame_data.get("time")
+        #print(server_time, client_time, "tempos")
+        #tempoUpload = server_time - (client_time/1000)
+        #print(tempoUpload *1000)
+        rawFrame = frame_data.get("frame")
+        teste = frame_data.get("csvSaver")
+        sampleIterable = frame_data.get("sample")
+        frame_array = np.array(rawFrame)
     
     # Converter a matriz numpy em uma imagem PIL
         image = Image.fromarray(frame_array.astype('uint8'))
@@ -167,8 +199,30 @@ def processar_emotions():
         start_time = time.time()
         analysis = emotion_detector.detect_emotions(image_resized)
         timeProcess = (time.time() - start_time) * 1000 
+        #print("timer ",teste['rttTimer'])
+        if(teste['rttTimer'] == 0):
+            lastData = teste
+            #print("last Data " , lastData)
+            tamanho_bytes = sys.getsizeof(rawFrame)
+            lastData["packetSizeUp"] = tamanho_bytes
+            
+        else:
+            salva = teste
+            teste = lastData
+            teste['rttTimer'] = salva["rttTimer"]
+            teste["Throughput"] =((teste["packetSizeUp"] +teste["packetSizeDown"]) /teste["rttTimer"]) *(1000)
+            lastData = salva
+            tamanho_bytes = sys.getsizeof(rawFrame)
+            lastData["packetSizeUp"] = tamanho_bytes
+            if(sampleIterable<=100):
 
-        print(analysis)
+                salvar_dados_csv(teste)
+        lastData["processTime" ] =timeProcess
+        #print(teste)
+    # Converter o vetor tridimensional em uma matriz numpy
+        
+
+        #print(analysis)
         # Detectar faces na imagemx 
         
         faces_data = []
@@ -187,7 +241,9 @@ def processar_emotions():
             max_emotions.append(max_emotion)
             max_values.append(max_value)
         # Retornar as localizações das faces em formato JSON
-        return jsonify({'faces': faces_data, "timeProcess" : timeProcess, 'emotion' : max_emotions, 'emotionValue': max_values})
+        response ={'faces': faces_data, "timeProcess" : timeProcess, 'emotion' : max_emotions, 'emotionValue': max_values} 
+       
+        return jsonify(response)
         
 
     return jsonify({'error': 'Método não permitido'}), 405
