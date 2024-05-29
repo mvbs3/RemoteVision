@@ -13,13 +13,16 @@ import time
 from fer import FER
 import csv
 import sys
+from threading import Lock
+lock = Lock()
+
 
     
 app = Flask(__name__)
 
 CORS(app)
 
-ip = "192.168.1.144"
+ip = "150.161.121.253"
 #ip = "10.0.0.200"
 
 my_port=5001
@@ -98,7 +101,7 @@ def register_mec():
   
 
 # Exemplo de uso
-    mec_url = "http://192.168.70.2/service_registry/v1/register"
+    mec_url = "http://172.22.0.169/service_registry/v1/register"
 
     try:
         # Fazendo a solicitação POST para registrar na API MEC
@@ -112,7 +115,7 @@ def register_mec():
         print("Erro ao registrar na API MEC:", e)
 
 # Registrar na API MEC ao iniciar o aplicativo Flask
-#register_mec()
+register_mec()
 
 face_detector = cv2.CascadeClassifier('../haarcascade_frontalface_default.xml')
 emotion_detector = FER(mtcnn=True)
@@ -200,24 +203,28 @@ def processar_emotions():
         analysis = emotion_detector.detect_emotions(image_resized)
         timeProcess = (time.time() - start_time) * 1000 
         #print("timer ",teste['rttTimer'])
-        if(teste['rttTimer'] == 0):
-            lastData = teste
-            #print("last Data " , lastData)
-            tamanho_bytes = sys.getsizeof(rawFrame)
-            lastData["packetSizeUp"] = tamanho_bytes
-            
-        else:
-            salva = teste
-            teste = lastData
-            teste['rttTimer'] = salva["rttTimer"]
-            teste["Throughput"] =((teste["packetSizeUp"] +teste["packetSizeDown"]) /teste["rttTimer"]) *(1000)
-            lastData = salva
-            tamanho_bytes = sys.getsizeof(rawFrame)
-            lastData["packetSizeUp"] = tamanho_bytes
-            if(sampleIterable<=100):
+        lock.acquire()
+        try:
+            if(teste['rttTimer'] == 0):
+                lastData = teste
+                #print("last Data " , lastData)
+                tamanho_bytes = sys.getsizeof(rawFrame)
+                lastData["packetSizeUp"] = tamanho_bytes
+                
+            else:
+                salva = teste
+                teste = lastData
+                teste['rttTimer'] = salva["rttTimer"]
+                teste["Throughput"] =((teste["packetSizeUp"] +teste["packetSizeDown"]) /teste["rttTimer"]) *(1000)
+                lastData = salva
+                tamanho_bytes = len(rawFrame)
+                lastData["packetSizeUp"] = tamanho_bytes
+                if(sampleIterable<=100):
 
-                salvar_dados_csv(teste)
-        lastData["processTime" ] =timeProcess
+                    salvar_dados_csv(teste)
+            lastData["processTime" ] =timeProcess
+        finally:
+            lock.release()
         #print(teste)
     # Converter o vetor tridimensional em uma matriz numpy
         
