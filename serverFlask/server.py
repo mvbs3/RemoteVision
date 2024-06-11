@@ -55,7 +55,7 @@ def salvar_dados_csv(data):
 
         # Se o arquivo não existe, escreve o cabeçalho
         if not file_exists:
-            writer.writerow(['rttTimer(ms)', 'latencyTime(ms)', 'packetSizeUp(B)', 'packetSizeDown(B)', 'Throughput(B/s)', 'processTime(ms)'])
+            writer.writerow(['rttTimer(ms)', 'latencyTime(ms)', 'packetSizeUp(B)', 'packetSizeDown(B)', 'Throughput(Mb/s)', 'processTime(ms)'])
 
         # Escreve os dados no CSV
         writer.writerow([data['rttTimer'], data['latencyTime'], data['packetSizeUp'], data['packetSizeDown'], data['Throughput'], data['processTime']])
