@@ -31,3 +31,6 @@ Linux/MacOS
 #### entrar venv linux
 
 `source venv/bin/activate`
+
+
+`ssh -i ".../tcc-brasil-Server_key.pem" iang@20.197.224.24`
