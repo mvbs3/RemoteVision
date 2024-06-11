@@ -21,8 +21,8 @@ lock = Lock()
 app = Flask(__name__)
 
 CORS(app)
-
-ip = "150.161.121.253"
+ip = "0.0.0.0"
+#ip = "150.161.121.253"
 #ip = "10.0.0.200"
 
 my_port=5001
@@ -115,7 +115,7 @@ def register_mec():
         print("Erro ao registrar na API MEC:", e)
 
 # Registrar na API MEC ao iniciar o aplicativo Flask
-register_mec()
+#register_mec()
 
 face_detector = cv2.CascadeClassifier('../haarcascade_frontalface_default.xml')
 emotion_detector = FER(mtcnn=True)
@@ -198,11 +198,15 @@ def processar_emotions():
         
         image_resized = cv2.resize(np.array(image), (640, 480))
         
+        lock.acquire()
+        try:
         # Converter a imagem PIL para um array numpy
-        start_time = time.time()
-        analysis = emotion_detector.detect_emotions(image_resized)
-        timeProcess = (time.time() - start_time) * 1000 
-        #print("timer ",teste['rttTimer'])
+            start_time = time.time()
+            analysis = emotion_detector.detect_emotions(image_resized)
+            timeProcess = (time.time() - start_time) * 1000 
+            #print("timer ",teste['rttTimer'])
+        finally:
+            lock.release()
         lock.acquire()
         try:
             if(teste['rttTimer'] == 0):
@@ -215,7 +219,7 @@ def processar_emotions():
                 salva = teste
                 teste = lastData
                 teste['rttTimer'] = salva["rttTimer"]
-                teste["Throughput"] =((teste["packetSizeUp"] +teste["packetSizeDown"]) /teste["rttTimer"]) *(1000)
+                teste["Throughput"] =((teste["packetSizeUp"] +teste["packetSizeDown"]) /teste["rttTimer"]) *(1000) *(8/(1024*1024))
                 lastData = salva
                 tamanho_bytes = len(rawFrame)
                 lastData["packetSizeUp"] = tamanho_bytes
