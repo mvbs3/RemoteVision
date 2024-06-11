@@ -34,3 +34,5 @@ Linux/MacOS
 
 
 `ssh -i ".../tcc-brasil-Server_key.pem" iang@20.197.224.24`
+
+`chmod 400 ".pem"`
