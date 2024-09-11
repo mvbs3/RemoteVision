@@ -19,3 +19,20 @@ Linux/MacOS
 `openssl genpkey -algorithm RSA -out key.pem -aes256`
 
 `openssl req -new -x509 -key key.pem -out cert.pem -days 365 `
+
+### criar venv
+
+`python3 -m venv venv`
+
+#### entrar venv windowns
+
+`.\venv\Scripts\activate`
+
+#### entrar venv linux
+
+`source venv/bin/activate`
+
+
+`ssh -i ".../tcc-brasil-Server_key.pem" iang@20.197.224.24`
+
+`chmod 400 ".pem"`
